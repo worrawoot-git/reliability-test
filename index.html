@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เครื่องมือตรวจสอบคุณภาพงานวิจัย (IOC & Alpha)</title>
+    <title>เครื่องมือตรวจสอบคุณภาพงานวิจัย (With Reset)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4f46e5; /* Indigo */
+            --primary: #4f46e5;
             --secondary: #4338ca;
             --bg: #f9fafb;
             --surface: #ffffff;
             --pass: #059669;
             --fail: #dc2626;
+            --gray: #6b7280;
+            --gray-dark: #4b5563;
         }
 
         body {
@@ -103,8 +105,15 @@
             resize: vertical;
         }
 
+        /* Button Group */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
         button.action-btn {
-            width: 100%;
+            flex: 2; /* ปุ่มคำนวณใหญ่กว่า */
             padding: 12px;
             background-color: var(--primary);
             color: white;
@@ -114,11 +123,28 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.2s;
-            margin-top: 10px;
         }
 
         button.action-btn:hover {
             background-color: var(--secondary);
+        }
+
+        button.reset-btn {
+            flex: 1; /* ปุ่มรีเซ็ตเล็กกว่า */
+            padding: 12px;
+            background-color: #e5e7eb;
+            color: var(--gray-dark);
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button.reset-btn:hover {
+            background-color: #d1d5db;
+            color: #000;
         }
 
         /* Results */
@@ -177,6 +203,16 @@
             color: #6b7280;
             margin-top: 5px;
         }
+        
+        .error-msg {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+            padding: 10px;
+            background-color: #fee2e2;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
@@ -204,7 +240,10 @@
             </div>
         </div>
         
-        <button class="action-btn" onclick="createIOCTable()" style="background-color: #4b5563; margin-bottom: 20px;">สร้างตาราง</button>
+        <div class="btn-group">
+            <button class="action-btn" onclick="createIOCTable()" style="background-color: #4b5563;">สร้างตาราง</button>
+            <button class="reset-btn" onclick="resetIOC()">รีเซ็ต</button>
+        </div>
 
         <div id="ioc_wrapper" style="display:none;">
             <div class="table-responsive">
@@ -214,7 +253,7 @@
                 </table>
             </div>
             
-            <button class="action-btn" onclick="calculateIOC()">คำนวณผลลัพธ์ IOC</button>
+            <button class="action-btn" style="margin-top: 15px;" onclick="calculateIOC()">คำนวณผลลัพธ์ IOC</button>
             
             <div id="ioc_result" class="result-card">
                 <h4 style="margin-top:0;">สรุปผลการวิเคราะห์</h4>
@@ -227,8 +266,7 @@
         <h3>คำนวณ Cronbach's Alpha Coefficient</h3>
         <p class="note">
             วิธีใช้: Copy ข้อมูลดิบจาก Excel (เฉพาะตัวเลข) แล้วนำมาวางในช่องด้านล่าง<br>
-            * แถวแนวนอน = ผู้ตอบแบบสอบถาม (Respondents)<br>
-            * แถวแนวตั้ง = ข้อคำถาม (Items)
+            * ระบบจะตัดแถวที่เป็นตัวหนังสือ (Header) ทิ้งให้อัตโนมัติ
         </p>
         
         <div class="input-group">
@@ -237,15 +275,19 @@
 4	3	4	4
 5	5	4	5
 ..."></textarea>
+            <div id="alpha_error" class="error-msg"></div>
         </div>
 
-        <button class="action-btn" onclick="calculateAlpha()">คำนวณค่า Alpha</button>
+        <div class="btn-group">
+            <button class="action-btn" onclick="calculateAlpha()">คำนวณค่า Alpha</button>
+            <button class="reset-btn" onclick="resetAlpha()">ล้างข้อมูล (Reset)</button>
+        </div>
 
         <div id="alpha_result" class="result-card">
             <div style="text-align: center;">ค่าสัมประสิทธิ์แอลฟา (α-coefficient)</div>
             <div class="result-value" id="alpha_value">0.000</div>
             <div id="alpha_interpretation" style="text-align: center; font-weight: bold;"></div>
-            <p class="note" style="text-align: center;">(จากกลุ่มตัวอย่าง <span id="n_respondents">0</span> คน, จำนวน <span id="n_items">0</span> ข้อ)</p>
+            <p class="note" style="text-align: center;">(วิเคราะห์จากข้อมูลที่สมบูรณ์ <span id="n_respondents">0</span> คน, จำนวน <span id="n_items">0</span> ข้อ)</p>
         </div>
     </div>
 
@@ -337,36 +379,80 @@
             detailDiv.innerHTML = `<p>ผ่านเกณฑ์ ${passCount} ข้อ, <span class="status-fail">ไม่ผ่าน ${items - passCount} ข้อ</span> ดังนี้:</p>` + detailsHTML;
         }
     }
+    
+    function resetIOC() {
+        document.getElementById('ioc_items').value = 5;
+        document.getElementById('ioc_experts').value = 3;
+        document.getElementById('ioc_wrapper').style.display = 'none';
+        document.getElementById('ioc_result').style.display = 'none';
+    }
 
-    // --- Alpha Logic ---
+    // --- Alpha Logic (Robust) ---
     function calculateAlpha() {
         const rawText = document.getElementById('alpha_data').value.trim();
-        if(!rawText) return alert("กรุณาวางข้อมูลตัวเลขลงในช่องว่าง");
+        const errorBox = document.getElementById('alpha_error');
+        errorBox.style.display = 'none';
 
-        // Parse Data
-        const rows = rawText.split('\n').filter(r => r.trim() !== '');
-        const data = rows.map(r => r.trim().split(/[\t, ]+/).map(Number));
+        if(!rawText) {
+            alert("กรุณาวางข้อมูลตัวเลขลงในช่องว่าง");
+            return;
+        }
 
-        const n = data.length; // Respondents
-        const k = data[0].length; // Items (Questions)
-
-        if(n < 2) return alert("ต้องมีผู้ตอบแบบสอบถามอย่างน้อย 2 คน");
+        // Robust Parsing Logic
+        let validData = [];
+        const lines = rawText.split('\n');
         
-        // 1. Calculate Variance for each item (column)
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (line === '') continue; 
+
+            // Split by tab, comma, or multiple spaces
+            const parts = line.split(/[\t, ]+/);
+            const rowNumbers = parts.map(p => parseFloat(p));
+            const hasNaN = rowNumbers.some(isNaN);
+
+            if (!hasNaN && rowNumbers.length > 1) {
+                validData.push(rowNumbers);
+            }
+        }
+
+        if (validData.length < 2) {
+            errorBox.innerText = "❌ เกิดข้อผิดพลาด: ข้อมูลที่ใช้ได้มีน้อยกว่า 2 แถว หรือมีตัวอักษรปนอยู่มากเกินไป";
+            errorBox.style.display = 'block';
+            return;
+        }
+
+        const n = validData.length; // Respondents
+        const k = validData[0].length; // Items
+
+        const inconsistent = validData.some(row => row.length !== k);
+        if (inconsistent) {
+            errorBox.innerText = "⚠️ แจ้งเตือน: ข้อมูลในแต่ละแถวมีจำนวนข้อไม่เท่ากัน ระบบจะคำนวณตามจำนวนข้อของแถวแรก";
+            errorBox.style.display = 'block';
+        }
+        
+        // 1. Calculate Variance for each item
         let sumItemVariance = 0;
         for(let col=0; col<k; col++) {
-            let colData = data.map(row => row[col]);
+            let colData = validData.map(row => row[col]);
             sumItemVariance += getVariance(colData);
         }
 
-        // 2. Calculate Variance of total scores (row sums)
-        let totalScores = data.map(row => row.reduce((a, b) => a + b, 0));
+        // 2. Calculate Variance of total scores
+        let totalScores = validData.map(row => row.reduce((a, b) => a + b, 0));
         let totalVariance = getVariance(totalScores);
 
-        // 3. Formula: (k / k-1) * (1 - (sumItemVar / totalVar))
+        // 3. Prevent Division by Zero
+        if (totalVariance === 0) {
+            errorBox.innerText = "❌ เกิดข้อผิดพลาด: ความแปรปรวนรวมเป็น 0 (ผู้ตอบทุกคนได้คะแนนรวมเท่ากันเป๊ะ) ทำให้คำนวณ Alpha ไม่ได้";
+            errorBox.style.display = 'block';
+            document.getElementById('alpha_result').style.display = 'none';
+            return;
+        }
+
+        // 4. Formula
         let alpha = (k / (k - 1)) * (1 - (sumItemVariance / totalVariance));
 
-        // Display
         document.getElementById('alpha_result').style.display = 'block';
         document.getElementById('alpha_value').innerText = alpha.toFixed(4);
         document.getElementById('n_respondents').innerText = n;
@@ -386,12 +472,18 @@
         interpDiv.style.color = color;
     }
 
+    function resetAlpha() {
+        document.getElementById('alpha_data').value = "";
+        document.getElementById('alpha_result').style.display = 'none';
+        document.getElementById('alpha_error').style.display = 'none';
+    }
+
     function getVariance(arr) {
         const n = arr.length;
         if (n <= 1) return 0;
         const mean = arr.reduce((a, b) => a + b) / n;
         const sumSqDiff = arr.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b);
-        return sumSqDiff / (n - 1); // Sample Variance
+        return sumSqDiff / (n - 1); 
     }
 </script>
 
