@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เครื่องมือตรวจสอบคุณภาพงานวิจัย (Fixed PDF)</title>
+    <title>เครื่องมือวิจัย (Excel & Print)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -43,8 +43,9 @@
         .tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
         .tab-btn { flex: 1; padding: 15px; background: none; border: none; font-size: 16px; font-weight: 600; color: #6b7280; cursor: pointer; }
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); background-color: #eef2ff; }
-        .tab-content { display: none; }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
         .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* Forms */
         .input-group { margin-bottom: 15px; }
@@ -53,13 +54,13 @@
         textarea { height: 200px; font-family: monospace; }
 
         /* Buttons */
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
         button { padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         
         .btn-main { flex: 2; background-color: var(--primary); color: white; }
         .btn-main:hover { background-color: var(--secondary); }
         
-        .btn-reset { flex: 1; background-color: #e5e7eb; color: #374151; }
+        .btn-reset { flex: 1; background-color: #e5e7eb; color: #374151; border: 1px solid #d1d5db; }
         .btn-reset:hover { background-color: #d1d5db; }
 
         /* Export Section */
@@ -68,8 +69,10 @@
             gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #d1d5db;
         }
         .btn-excel { flex: 1; background-color: #107c41; color: white; }
-        .btn-pdf { flex: 1; background-color: #b30b00; color: white; }
+        .btn-excel:hover { background-color: #0c5e31; }
+        
         .btn-print { flex: 1; background-color: #374151; color: white; }
+        .btn-print:hover { background-color: #1f2937; }
 
         /* Results */
         .result-card { margin-top: 20px; padding: 20px; background-color: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; display: none; }
@@ -80,20 +83,23 @@
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: center; }
         th { background-color: #f3f4f6; color: #374151; }
-        select { padding: 5px; width: 100%; }
+        select { padding: 5px; width: 100%; border: 1px solid #d1d5db; border-radius: 4px; }
         
         .status-pass { color: var(--pass); font-weight: bold; }
         .status-fail { color: var(--fail); font-weight: bold; }
         .error-msg { color: #dc2626; font-weight: bold; margin-top: 10px; display: none; padding: 10px; background-color: #fee2e2; border-radius: 6px; }
 
-        /* @MEDIA PRINT: สำหรับปุ่ม "พิมพ์ (ชัวร์สุด)" */
+        /* @MEDIA PRINT: จัดหน้ากระดาษเวลาสั่งพิมพ์ */
         @media print {
             body * { visibility: hidden; }
             .print-area, .print-area * { visibility: visible; }
             .print-area { position: absolute; left: 0; top: 0; width: 100%; }
-            /* ซ่อนปุ่มต่างๆ เวลาพิมพ์ */
-            button, .input-group, .tabs, h1 { display: none !important; }
-            .result-card { border: 1px solid #000; }
+            /* ซ่อนปุ่มทั้งหมดเวลาพิมพ์ */
+            button, .input-group, .tabs, h1, .export-section { display: none !important; }
+            .result-card { border: 1px solid #000; box-shadow: none; }
+            table { width: 100% !important; }
+            /* ป้องกันตารางขาดตอน */
+            tr { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -141,15 +147,14 @@
 
             <div id="ioc_export_btns" class="export-section">
                 <button class="btn-excel" onclick="exportIOCExcel()">📥 Excel</button>
-                <button class="btn-pdf" onclick="exportIOCPDF()">📄 PDF (โหลดไฟล์)</button>
-                <button class="btn-print" onclick="window.print()">🖨️ พิมพ์ (ชัวร์สุด)</button>
+                <button class="btn-print" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
             </div>
         </div>
     </div>
 
     <div id="alpha" class="tab-content">
         <h3>คำนวณ Cronbach's Alpha</h3>
-        <p style="font-size:0.9em; color:#666;">Copy เฉพาะตัวเลขจาก Excel มาวาง</p>
+        <p style="font-size:0.9em; color:#666;">Copy เฉพาะตัวเลขจาก Excel มาวาง (ระบบจะตัด Header ให้เอง)</p>
         
         <div class="input-group">
             <textarea id="alpha_data" placeholder="ตัวอย่าง:
@@ -161,7 +166,7 @@
 
         <div class="btn-group">
             <button class="btn-main" onclick="calculateAlpha()">คำนวณค่า Alpha</button>
-            <button class="btn-reset" onclick="resetAlpha()">รีเซ็ต</button>
+            <button class="btn-reset" onclick="resetAlpha()">ล้างข้อมูล</button>
         </div>
 
         <div id="alpha_wrapper" style="display:none;">
@@ -176,15 +181,13 @@
 
             <div id="alpha_export_btns" class="export-section">
                 <button class="btn-excel" onclick="exportAlphaExcel()">📥 Excel</button>
-                <button class="btn-pdf" onclick="exportAlphaPDF()">📄 PDF (โหลดไฟล์)</button>
-                <button class="btn-print" onclick="window.print()">🖨️ พิมพ์ (ชัวร์สุด)</button>
+                <button class="btn-print" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
             </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
     // --- Tab Switching ---
@@ -193,7 +196,8 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabName).classList.add('active');
         event.currentTarget.classList.add('active');
-        // Reset classes for printing
+        
+        // Reset print area logic
         document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
         if(tabName === 'ioc') document.getElementById('ioc_print_area').classList.add('print-area');
         if(tabName === 'alpha') document.getElementById('alpha_print_area').classList.add('print-area');
@@ -222,7 +226,7 @@
         document.getElementById('ioc_result').style.display = 'none';
         document.getElementById('ioc_export_btns').style.display = 'none';
         
-        // Setup print area
+        // Set print area
         document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
         document.getElementById('ioc_print_area').classList.add('print-area');
     }
@@ -259,6 +263,11 @@
         document.getElementById('ioc_export_btns').style.display = 'flex';
     }
 
+    function resetIOC() {
+        document.getElementById('ioc_wrapper').style.display = 'none';
+        document.getElementById('ioc_items').value = 5;
+    }
+
     // ================= ALPHA LOGIC =================
     function calculateAlpha() {
         const rawText = document.getElementById('alpha_data').value.trim();
@@ -276,7 +285,7 @@
         }
 
         if(validData.length < 2) {
-            errorBox.innerText = "❌ ข้อมูลไม่ถูกต้อง (ต้องมีตัวเลขอย่างน้อย 2 แถว)";
+            errorBox.innerText = "❌ ข้อมูลไม่ถูกต้อง (ต้องมีอย่างน้อย 2 แถว)";
             errorBox.style.display = 'block'; return;
         }
 
@@ -313,7 +322,7 @@
         
         document.getElementById('alpha_export_btns').style.display = 'flex';
         
-        // Setup print area
+        // Set print area
         document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
         document.getElementById('alpha_print_area').classList.add('print-area');
     }
@@ -325,33 +334,13 @@
         return arr.reduce((a,b)=>a+Math.pow(b-mean,2),0)/(n-1);
     }
 
-    function resetIOC() {
-        document.getElementById('ioc_wrapper').style.display = 'none';
-        document.getElementById('ioc_items').value = 5;
-    }
     function resetAlpha() {
         document.getElementById('alpha_data').value = "";
         document.getElementById('alpha_wrapper').style.display = 'none';
+        document.getElementById('alpha_error').style.display = 'none';
     }
 
-    // ================= EXPORT FUNCTIONS =================
-    
-    // 1. PDF Export (html2pdf)
-    function exportIOCPDF() {
-        if(typeof html2pdf === 'undefined') return alert("กำลังโหลดโปรแกรม PDF... กรุณารอสักครู่หรือใช้ปุ่ม 'พิมพ์'");
-        const element = document.getElementById('ioc_print_area');
-        const opt = { margin: 0.5, filename: 'IOC_Report.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-        html2pdf().set(opt).from(element).save().catch(err => alert("เกิดข้อผิดพลาด: " + err + "\n\nแนะนำให้ใช้ปุ่ม 'พิมพ์ (ชัวร์สุด)' แทนครับ"));
-    }
-
-    function exportAlphaPDF() {
-        if(typeof html2pdf === 'undefined') return alert("กำลังโหลดโปรแกรม PDF... กรุณารอสักครู่หรือใช้ปุ่ม 'พิมพ์'");
-        const element = document.getElementById('alpha_print_area');
-        const opt = { margin: 1, filename: 'Alpha_Report.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-        html2pdf().set(opt).from(element).save().catch(err => alert("เกิดข้อผิดพลาด: " + err + "\n\nแนะนำให้ใช้ปุ่ม 'พิมพ์ (ชัวร์สุด)' แทนครับ"));
-    }
-
-    // 2. Excel Export
+    // ================= EXPORT FUNCTIONS (EXCEL ONLY) =================
     function exportIOCExcel() {
         let originalTable = document.getElementById('ioc_table');
         let tableClone = originalTable.cloneNode(true);
@@ -387,7 +376,6 @@
         XLSX.utils.book_append_sheet(wb, ws, "Alpha Result");
         XLSX.writeFile(wb, 'Alpha_Analysis.xlsx');
     }
-
 </script>
 
 </body>
