@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เครื่องมือตรวจสอบคุณภาพงานวิจัย (Complete)</title>
+    <title>เครื่องมือตรวจสอบคุณภาพงานวิจัย (Fixed PDF)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
+    
     <style>
         :root {
             --primary: #4f46e5;
@@ -42,72 +40,39 @@
         }
 
         /* Tabs */
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #e5e7eb;
-            margin-bottom: 20px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            color: #6b7280;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tab-btn.active {
-            color: var(--primary);
-            border-bottom: 3px solid var(--primary);
-            background-color: #eef2ff;
-        }
-
-        .tab-content { display: none; animation: fadeIn 0.4s; }
+        .tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 15px; background: none; border: none; font-size: 16px; font-weight: 600; color: #6b7280; cursor: pointer; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); background-color: #eef2ff; }
+        .tab-content { display: none; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Forms */
         .input-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: 600; }
-        
-        input[type="number"], textarea {
-            width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 16px; box-sizing: border-box;
-        }
-        textarea { height: 200px; font-family: monospace; resize: vertical; }
+        input[type="number"], textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        textarea { height: 200px; font-family: monospace; }
 
         /* Buttons */
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        button { padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         
-        button {
-            padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-        }
         .btn-main { flex: 2; background-color: var(--primary); color: white; }
         .btn-main:hover { background-color: var(--secondary); }
         
-        .btn-reset { flex: 1; background-color: #e5e7eb; color: #374151; border: 1px solid #d1d5db; }
+        .btn-reset { flex: 1; background-color: #e5e7eb; color: #374151; }
         .btn-reset:hover { background-color: #d1d5db; }
 
-        /* Export Buttons Area */
+        /* Export Section */
         .export-section {
-            display: none; /* ซ่อนไว้ก่อน จะโชว์เมื่อคำนวณเสร็จ */
-            gap: 10px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #d1d5db;
+            display: none; 
+            gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #d1d5db;
         }
         .btn-excel { flex: 1; background-color: #107c41; color: white; }
-        .btn-excel:hover { background-color: #0c5e31; }
         .btn-pdf { flex: 1; background-color: #b30b00; color: white; }
-        .btn-pdf:hover { background-color: #8a0800; }
+        .btn-print { flex: 1; background-color: #374151; color: white; }
 
         /* Results */
-        .result-card {
-            margin-top: 20px; padding: 20px; background-color: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; display: none;
-        }
+        .result-card { margin-top: 20px; padding: 20px; background-color: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; display: none; }
         .result-value { font-size: 36px; font-weight: bold; color: var(--pass); text-align: center; margin: 10px 0; }
 
         /* Table */
@@ -115,15 +80,21 @@
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: center; }
         th { background-color: #f3f4f6; color: #374151; }
-        select { padding: 5px; border-radius: 4px; border: 1px solid #d1d5db; width: 100%; }
-
+        select { padding: 5px; width: 100%; }
+        
         .status-pass { color: var(--pass); font-weight: bold; }
         .status-fail { color: var(--fail); font-weight: bold; }
         .error-msg { color: #dc2626; font-weight: bold; margin-top: 10px; display: none; padding: 10px; background-color: #fee2e2; border-radius: 6px; }
-        .note { font-size: 0.9em; color: #6b7280; margin-top: 5px; }
 
-        /* PDF Printing Hack: ป้องกันตารางขาดตอน */
-        tr { page-break-inside: avoid; }
+        /* @MEDIA PRINT: สำหรับปุ่ม "พิมพ์ (ชัวร์สุด)" */
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            /* ซ่อนปุ่มต่างๆ เวลาพิมพ์ */
+            button, .input-group, .tabs, h1 { display: none !important; }
+            .result-card { border: 1px solid #000; }
+        }
     </style>
 </head>
 <body>
@@ -138,7 +109,6 @@
 
     <div id="ioc" class="tab-content active">
         <h3>คำนวณค่าดัชนีความสอดคล้อง (IOC)</h3>
-        <p class="note">ระบุจำนวนข้อคำถามและจำนวนผู้เชี่ยวชาญเพื่อสร้างตารางลงคะแนน</p>
         
         <div style="display: flex; gap: 15px;">
             <div style="flex: 1;">
@@ -157,60 +127,64 @@
         </div>
 
         <div id="ioc_wrapper" style="display:none;">
-            <div id="ioc_content_to_print">
+            <div id="ioc_print_area" class="print-area">
                 <div class="table-responsive">
-                    <table id="ioc_table">
-                        <thead></thead>
-                        <tbody></tbody>
-                    </table>
+                    <table id="ioc_table"><thead></thead><tbody></tbody></table>
                 </div>
-                
                 <div id="ioc_result" class="result-card">
                     <h4 style="margin-top:0;">สรุปผลการวิเคราะห์</h4>
                     <div id="ioc_details"></div>
                 </div>
             </div>
+
             <button class="btn-main" style="width:100%; margin-top:15px;" onclick="calculateIOC()">คำนวณผลลัพธ์ IOC</button>
 
             <div id="ioc_export_btns" class="export-section">
-                <button class="btn-excel" onclick="exportIOCExcel()">📥 ส่งออก Excel</button>
-                <button class="btn-pdf" onclick="exportIOCPDF()">📄 ส่งออก PDF</button>
+                <button class="btn-excel" onclick="exportIOCExcel()">📥 Excel</button>
+                <button class="btn-pdf" onclick="exportIOCPDF()">📄 PDF (โหลดไฟล์)</button>
+                <button class="btn-print" onclick="window.print()">🖨️ พิมพ์ (ชัวร์สุด)</button>
             </div>
         </div>
     </div>
 
     <div id="alpha" class="tab-content">
-        <h3>คำนวณ Cronbach's Alpha Coefficient</h3>
-        <p class="note">
-            วิธีใช้: Copy ข้อมูลตัวเลขจาก Excel มาวาง (ระบบจะตัด Header ทิ้งให้อัตโนมัติ)
-        </p>
+        <h3>คำนวณ Cronbach's Alpha</h3>
+        <p style="font-size:0.9em; color:#666;">Copy เฉพาะตัวเลขจาก Excel มาวาง</p>
         
         <div class="input-group">
-            <textarea id="alpha_data" placeholder="วางข้อมูลที่นี่..."></textarea>
+            <textarea id="alpha_data" placeholder="ตัวอย่าง:
+5	4	5
+4	3	4
+..."></textarea>
             <div id="alpha_error" class="error-msg"></div>
         </div>
 
         <div class="btn-group">
             <button class="btn-main" onclick="calculateAlpha()">คำนวณค่า Alpha</button>
-            <button class="btn-reset" onclick="resetAlpha()">ล้างข้อมูล (Reset)</button>
+            <button class="btn-reset" onclick="resetAlpha()">รีเซ็ต</button>
         </div>
 
-        <div id="alpha_content_to_print">
-            <div id="alpha_result" class="result-card">
-                <div style="text-align: center;">ค่าสัมประสิทธิ์แอลฟา (α-coefficient)</div>
-                <div class="result-value" id="alpha_value">0.000</div>
-                <div id="alpha_interpretation" style="text-align: center; font-weight: bold;"></div>
-                <p class="note" style="text-align: center;">(วิเคราะห์จากกลุ่มตัวอย่าง <span id="n_respondents">0</span> คน, จำนวน <span id="n_items">0</span> ข้อ)</p>
+        <div id="alpha_wrapper" style="display:none;">
+            <div id="alpha_print_area" class="print-area">
+                <div class="result-card" style="display:block;">
+                    <div style="text-align: center;">ค่าสัมประสิทธิ์แอลฟา (α-coefficient)</div>
+                    <div class="result-value" id="alpha_value">0.000</div>
+                    <div id="alpha_interpretation" style="text-align: center; font-weight: bold;"></div>
+                    <p style="text-align: center; font-size:0.9em;">(N = <span id="n_respondents">0</span>, ข้อ = <span id="n_items">0</span>)</p>
+                </div>
+            </div>
+
+            <div id="alpha_export_btns" class="export-section">
+                <button class="btn-excel" onclick="exportAlphaExcel()">📥 Excel</button>
+                <button class="btn-pdf" onclick="exportAlphaPDF()">📄 PDF (โหลดไฟล์)</button>
+                <button class="btn-print" onclick="window.print()">🖨️ พิมพ์ (ชัวร์สุด)</button>
             </div>
         </div>
-
-        <div id="alpha_export_btns" class="export-section">
-            <button class="btn-excel" onclick="exportAlphaExcel()">📥 ส่งออก Excel</button>
-            <button class="btn-pdf" onclick="exportAlphaPDF()">📄 ส่งออก PDF</button>
-        </div>
     </div>
-
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
     // --- Tab Switching ---
@@ -219,6 +193,10 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabName).classList.add('active');
         event.currentTarget.classList.add('active');
+        // Reset classes for printing
+        document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
+        if(tabName === 'ioc') document.getElementById('ioc_print_area').classList.add('print-area');
+        if(tabName === 'alpha') document.getElementById('alpha_print_area').classList.add('print-area');
     }
 
     // ================= IOC LOGIC =================
@@ -236,148 +214,92 @@
         let bodyHTML = '';
         for(let i=1; i<=items; i++) {
             bodyHTML += `<tr><td>${i}</td>`;
-            for(let j=1; j<=experts; j++) {
-                bodyHTML += `<td><select class="ioc-input" data-row="${i}"><option value="1">+1</option><option value="0">0</option><option value="-1">-1</option></select></td>`;
-            }
+            for(let j=1; j<=experts; j++) bodyHTML += `<td><select class="ioc-input" data-row="${i}"><option value="1">+1</option><option value="0">0</option><option value="-1">-1</option></select></td>`;
             bodyHTML += `<td id="ioc-val-${i}">-</td><td id="ioc-res-${i}">-</td></tr>`;
         }
         table.querySelector('tbody').innerHTML = bodyHTML;
         document.getElementById('ioc_wrapper').style.display = 'block';
         document.getElementById('ioc_result').style.display = 'none';
         document.getElementById('ioc_export_btns').style.display = 'none';
+        
+        // Setup print area
+        document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
+        document.getElementById('ioc_print_area').classList.add('print-area');
     }
 
     function calculateIOC() {
         const items = parseInt(document.getElementById('ioc_items').value);
         const experts = parseInt(document.getElementById('ioc_experts').value);
         const inputs = document.querySelectorAll('.ioc-input');
-        
         let scores = {};
+        
         inputs.forEach(inp => {
             const row = inp.getAttribute('data-row');
             scores[row] = (scores[row] || 0) + parseInt(inp.value);
         });
 
         let passCount = 0;
-        let detailsHTML = "<ul style='text-align:left;'>";
+        let detailsHTML = "<ul style='text-align:left; padding-left:20px;'>";
 
         for(let i=1; i<=items; i++) {
             let ioc = (scores[i] || 0) / experts;
             let passed = ioc >= 0.5;
             document.getElementById(`ioc-val-${i}`).innerText = ioc.toFixed(2);
-            document.getElementById(`ioc-res-${i}`).innerHTML = passed 
-                ? '<span class="status-pass">ใช้ได้</span>' : '<span class="status-fail">ตัดออก</span>';
+            document.getElementById(`ioc-res-${i}`).innerHTML = passed ? '<span class="status-pass">ใช้ได้</span>' : '<span class="status-fail">ตัดออก</span>';
             if(passed) passCount++;
-            else detailsHTML += `<li>ข้อที่ ${i}: IOC = ${ioc.toFixed(2)} <span class="status-fail">(ควรปรับปรุง)</span></li>`;
+            else detailsHTML += `<li>ข้อที่ ${i}: IOC = ${ioc.toFixed(2)} <span class="status-fail">(ปรับปรุง)</span></li>`;
         }
         detailsHTML += "</ul>";
 
-        const detailDiv = document.getElementById('ioc_details');
         document.getElementById('ioc_result').style.display = 'block';
+        const detailDiv = document.getElementById('ioc_details');
+        if(passCount === items) detailDiv.innerHTML = `<p class="status-pass">✅ ผ่านเกณฑ์ทุกข้อ (IOC ≥ 0.5)</p>`;
+        else detailDiv.innerHTML = `<p>ผ่าน ${passCount} ข้อ, <span class="status-fail">ไม่ผ่าน ${items - passCount} ข้อ</span>:</p>` + detailsHTML;
         
-        if(passCount === items) {
-            detailDiv.innerHTML = `<p class="status-pass" style="font-size:18px">✅ ผ่านเกณฑ์ทุกข้อ (IOC ≥ 0.5)</p>`;
-        } else {
-            detailDiv.innerHTML = `<p>ผ่าน ${passCount} ข้อ, <span class="status-fail">ไม่ผ่าน ${items - passCount} ข้อ</span>:</p>` + detailsHTML;
-        }
-        
-        // Show Export Buttons
         document.getElementById('ioc_export_btns').style.display = 'flex';
     }
-
-    function resetIOC() {
-        document.getElementById('ioc_items').value = 5;
-        document.getElementById('ioc_experts').value = 3;
-        document.getElementById('ioc_wrapper').style.display = 'none';
-    }
-
-    // --- Export IOC ---
-    function exportIOCExcel() {
-        // Clone table to replace Selects with Text
-        let originalTable = document.getElementById('ioc_table');
-        let tableClone = originalTable.cloneNode(true);
-        let inputs = originalTable.querySelectorAll('.ioc-input');
-        let cloneInputs = tableClone.querySelectorAll('.ioc-input');
-        
-        inputs.forEach((inp, index) => {
-            let val = inp.options[inp.selectedIndex].text;
-            cloneInputs[index].parentElement.innerHTML = val; 
-        });
-
-        var wb = XLSX.utils.table_to_book(tableClone, {sheet: "IOC Results"});
-        XLSX.writeFile(wb, 'IOC_Analysis_Result.xlsx');
-    }
-
-    function exportIOCPDF() {
-        // เทคนิคแก้ตารางขาด: เลือก Element ที่ครอบตารางไว้
-        var element = document.getElementById('ioc_content_to_print');
-        
-        var opt = {
-            margin:       0.5, // ขอบกระดาษนิ้ว
-            filename:     'IOC_Report.pdf',
-            image:        { type: 'jpeg', quality: 1 },
-            html2canvas:  { scale: 2 }, // ความละเอียดสูง
-            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // ป้องกันการตัดบรรทัดขาด
-        };
-        
-        // สั่งให้ html2pdf ทำงาน
-        html2pdf().set(opt).from(element).save();
-    }
-
 
     // ================= ALPHA LOGIC =================
     function calculateAlpha() {
         const rawText = document.getElementById('alpha_data').value.trim();
         const errorBox = document.getElementById('alpha_error');
         errorBox.style.display = 'none';
-
         if(!rawText) return alert("กรุณาวางข้อมูล");
 
         let validData = [];
         const lines = rawText.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (line === '') continue;
-            const parts = line.split(/[\t, ]+/);
-            const rowNumbers = parts.map(p => parseFloat(p));
-            if (!rowNumbers.some(isNaN) && rowNumbers.length > 1) {
-                validData.push(rowNumbers);
-            }
+        for(let line of lines) {
+            line = line.trim();
+            if(line === '') continue;
+            const parts = line.split(/[\t, ]+/).map(p => parseFloat(p));
+            if(!parts.some(isNaN) && parts.length > 1) validData.push(parts);
         }
 
-        if (validData.length < 2) {
-            errorBox.innerText = "❌ ข้อมูลไม่เพียงพอ หรือมีตัวอักษรปนอยู่";
-            errorBox.style.display = 'block';
-            return;
+        if(validData.length < 2) {
+            errorBox.innerText = "❌ ข้อมูลไม่ถูกต้อง (ต้องมีตัวเลขอย่างน้อย 2 แถว)";
+            errorBox.style.display = 'block'; return;
         }
 
         const n = validData.length;
         const k = validData[0].length;
         let sumItemVar = 0;
-        for(let col=0; col<k; col++) {
-            let colData = validData.map(row => row[col]);
-            sumItemVar += getVariance(colData);
-        }
-
-        let totalScores = validData.map(row => row.reduce((a, b) => a + b, 0));
+        for(let c=0; c<k; c++) sumItemVar += getVariance(validData.map(r => r[c]));
+        
+        let totalScores = validData.map(r => r.reduce((a,b)=>a+b,0));
         let totalVar = getVariance(totalScores);
 
-        if (totalVar === 0) {
+        if(totalVar === 0) {
             errorBox.innerText = "❌ ความแปรปรวนรวมเป็น 0 (คำนวณไม่ได้)";
-            errorBox.style.display = 'block';
-            document.getElementById('alpha_result').style.display = 'none';
-            document.getElementById('alpha_export_btns').style.display = 'none';
-            return;
+            errorBox.style.display = 'block'; return;
         }
 
-        let alpha = (k / (k - 1)) * (1 - (sumItemVar / totalVar));
-
-        document.getElementById('alpha_result').style.display = 'block';
+        let alpha = (k/(k-1)) * (1 - (sumItemVar/totalVar));
+        
+        document.getElementById('alpha_wrapper').style.display = 'block';
         document.getElementById('alpha_value').innerText = alpha.toFixed(4);
         document.getElementById('n_respondents').innerText = n;
         document.getElementById('n_items').innerText = k;
-
+        
         let text = "", color = "";
         if(alpha >= 0.9) { text = "ระดับดีมาก (Excellent)"; color = "#047857"; }
         else if(alpha >= 0.8) { text = "ระดับดี (Good)"; color = "#059669"; }
@@ -388,59 +310,84 @@
         const interpDiv = document.getElementById('alpha_interpretation');
         interpDiv.innerText = text;
         interpDiv.style.color = color;
-
+        
         document.getElementById('alpha_export_btns').style.display = 'flex';
+        
+        // Setup print area
+        document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
+        document.getElementById('alpha_print_area').classList.add('print-area');
     }
 
     function getVariance(arr) {
         const n = arr.length;
-        if (n <= 1) return 0;
-        const mean = arr.reduce((a, b) => a + b) / n;
-        return arr.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / (n - 1);
+        if(n <= 1) return 0;
+        const mean = arr.reduce((a,b)=>a+b)/n;
+        return arr.reduce((a,b)=>a+Math.pow(b-mean,2),0)/(n-1);
     }
 
+    function resetIOC() {
+        document.getElementById('ioc_wrapper').style.display = 'none';
+        document.getElementById('ioc_items').value = 5;
+    }
     function resetAlpha() {
         document.getElementById('alpha_data').value = "";
-        document.getElementById('alpha_result').style.display = 'none';
-        document.getElementById('alpha_error').style.display = 'none';
-        document.getElementById('alpha_export_btns').style.display = 'none';
+        document.getElementById('alpha_wrapper').style.display = 'none';
     }
 
-    // --- Export Alpha ---
+    // ================= EXPORT FUNCTIONS =================
+    
+    // 1. PDF Export (html2pdf)
+    function exportIOCPDF() {
+        if(typeof html2pdf === 'undefined') return alert("กำลังโหลดโปรแกรม PDF... กรุณารอสักครู่หรือใช้ปุ่ม 'พิมพ์'");
+        const element = document.getElementById('ioc_print_area');
+        const opt = { margin: 0.5, filename: 'IOC_Report.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+        html2pdf().set(opt).from(element).save().catch(err => alert("เกิดข้อผิดพลาด: " + err + "\n\nแนะนำให้ใช้ปุ่ม 'พิมพ์ (ชัวร์สุด)' แทนครับ"));
+    }
+
+    function exportAlphaPDF() {
+        if(typeof html2pdf === 'undefined') return alert("กำลังโหลดโปรแกรม PDF... กรุณารอสักครู่หรือใช้ปุ่ม 'พิมพ์'");
+        const element = document.getElementById('alpha_print_area');
+        const opt = { margin: 1, filename: 'Alpha_Report.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+        html2pdf().set(opt).from(element).save().catch(err => alert("เกิดข้อผิดพลาด: " + err + "\n\nแนะนำให้ใช้ปุ่ม 'พิมพ์ (ชัวร์สุด)' แทนครับ"));
+    }
+
+    // 2. Excel Export
+    function exportIOCExcel() {
+        let originalTable = document.getElementById('ioc_table');
+        let tableClone = originalTable.cloneNode(true);
+        let inputs = originalTable.querySelectorAll('.ioc-input');
+        let cloneInputs = tableClone.querySelectorAll('.ioc-input');
+        
+        inputs.forEach((inp, i) => {
+            cloneInputs[i].parentElement.innerHTML = inp.options[inp.selectedIndex].text;
+        });
+        
+        var wb = XLSX.utils.table_to_book(tableClone, {sheet: "IOC Results"});
+        XLSX.writeFile(wb, 'IOC_Analysis.xlsx');
+    }
+
     function exportAlphaExcel() {
         const val = document.getElementById('alpha_value').innerText;
+        const interp = document.getElementById('alpha_interpretation').innerText;
         const n = document.getElementById('n_respondents').innerText;
         const k = document.getElementById('n_items').innerText;
-        const interp = document.getElementById('alpha_interpretation').innerText;
 
         const data = [
-            ["Report", "Cronbach's Alpha Analysis"],
+            ["Cronbach's Alpha Report"],
             ["Date", new Date().toLocaleString()],
             [],
-            ["Metric", "Value"],
             ["Alpha Coefficient", parseFloat(val)],
             ["Interpretation", interp],
             ["Respondents (N)", parseInt(n)],
-            ["Items (Questions)", parseInt(k)]
+            ["Items", parseInt(k)]
         ];
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(data);
         XLSX.utils.book_append_sheet(wb, ws, "Alpha Result");
-        XLSX.writeFile(wb, 'Alpha_Result.xlsx');
+        XLSX.writeFile(wb, 'Alpha_Analysis.xlsx');
     }
 
-    function exportAlphaPDF() {
-        var element = document.getElementById('alpha_content_to_print');
-        var opt = {
-            margin:       1,
-            filename:     'Alpha_Report.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 },
-            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(element).save();
-    }
 </script>
 
 </body>
