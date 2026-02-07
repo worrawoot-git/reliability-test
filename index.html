@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Calculator Tool (Complete)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        /* Tabs Styling */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+            gap: 5px;
+        }
+
+        .tab-btn {
+            padding: 10px 15px;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #6b7280;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: #d1d5db;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+            font-family: monospace;
+        }
+
+        .btn-calc {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-calc:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            width: auto;
+            padding: 8px 16px;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #ecfdf5;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .result-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #047857;
+        }
+
+        .note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* IOC Table Styling */
+        .ioc-table-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .status-pass { color: var(--success); font-weight: bold; }
+        .status-fail { color: var(--danger); font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🧮 เครื่องมือคำนวณงานวิจัยครบวงจร</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'yamane')">Yamane</button>
+        <button class="tab-btn" onclick="openTab(event, 'krejcie')">Krejcie & Morgan</button>
+        <button class="tab-btn" onclick="openTab(event, 'cochran')">Cochran</button>
+        <button class="tab-btn" onclick="openTab(event, 'cohen')">Cohen's d</button>
+        <button class="tab-btn" onclick="openTab(event, 'ioc')" style="background-color: #8b5cf6; color:white;">IOC</button>
+        <button class="tab-btn" onclick="openTab(event, 'alpha')" style="background-color: #ec4899; color:white;">Cronbach's Alpha</button>
+    </div>
+
+    <div id="yamane" class="tab-content active">
+        <h3>สูตร Taro Yamane</h3>
+        <p class="note">สำหรับประชากรที่ทราบจำนวนแน่นอน (Finite Population)</p>
+        <div class="form-group">
+            <label>จำนวนประชากร (N)</label>
+            <input type="number" id="y_pop" placeholder="ระบุจำนวน">
+        </div>
+        <div class="form-group">
+            <label>ความคลาดเคลื่อน (e)</label>
+            <select id="y_error">
+                <option value="0.05">0.05 (5%) - มาตรฐาน</option>
+                <option value="0.01">0.01 (1%)</option>
+            </select>
+        </div>
+        <button class="btn-calc" onclick="calcYamane()">คำนวณ</button>
+        <div id="res_yamane" class="result-box">
+            ขนาดกลุ่มตัวอย่าง: <div class="result-number" id="val_yamane">0</div>
+        </div>
+    </div>
+
+    <div id="krejcie" class="tab-content">
+        <h3>สูตร Krejcie & Morgan</h3>
+        <div class="form-group">
+            <label>จำนวนประชากร (N)</label>
+            <input type="number" id="k_pop" placeholder="ระบุจำนวน">
+        </div>
+        <button class="btn-calc" onclick="calcKrejcie()">คำนวณ</button>
+        <div id="res_krejcie" class="result-box">
+            ขนาดกลุ่มตัวอย่าง: <div class="result-number" id="val_krejcie">0</div>
+        </div>
+    </div>
+
+    <div id="cochran" class="tab-content">
+        <h3>สูตร Cochran</h3>
+        <p class="note">หากไม่ทราบประชากร ให้เว้นว่างไว้ (Infinite Population)</p>
+        <div class="form-group">
+            <label>จำนวนประชากร (N)</label>
+            <input type="number" id="c_pop" placeholder="ระบุหรือไม่ก็ได้">
+        </div>
+        <div class="form-group">
+            <label>ระดับความเชื่อมั่น</label>
+            <select id="c_conf">
+                <option value="1.96">95%</option>
+                <option value="2.58">99%</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>ความคลาดเคลื่อน (e)</label>
+            <select id="c_error">
+                <option value="0.05">±5%</option>
+                <option value="0.01">±1%</option>
+            </select>
+        </div>
+        <button class="btn-calc" onclick="calcCochran()">คำนวณ</button>
+        <div id="res_cochran" class="result-box">
+            ขนาดกลุ่มตัวอย่าง: <div class="result-number" id="val_cochran">0</div>
+        </div>
+    </div>
+
+    <div id="cohen" class="tab-content">
+        <h3>Cohen's d (Power Analysis)</h3>
+        <div class="form-group">
+            <label>Effect Size (d)</label>
+            <select id="d_val">
+                <option value="0.2">0.2 (เล็ก)</option>
+                <option value="0.5" selected>0.5 (ปานกลาง)</option>
+                <option value="0.8">0.8 (ใหญ่)</option>
+            </select>
+        </div>
+        <button class="btn-calc" onclick="calcCohen()">คำนวณ</button>
+        <div id="res_cohen" class="result-box">
+            ขนาดกลุ่มตัวอย่างรวม: <div class="result-number" id="val_cohen">0</div>
+        </div>
+    </div>
+
+    <div id="ioc" class="tab-content">
+        <h3>คำนวณค่า IOC (ความเที่ยงตรง)</h3>
+        <p class="note">ระบุจำนวนข้อคำถามและจำนวนผู้เชี่ยวชาญเพื่อสร้างตาราง</p>
+        
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="flex:1;">
+                <label>จำนวนข้อ</label>
+                <input type="number" id="ioc_items" value="5" min="1">
+            </div>
+            <div style="flex:1;">
+                <label>จำนวนผู้เชี่ยวชาญ</label>
+                <input type="number" id="ioc_experts" value="3" min="1">
+            </div>
+        </div>
+        <button class="btn-calc btn-secondary" onclick="generateIOCTable()">สร้างตารางกรอกคะแนน</button>
+
+        <div id="ioc_area" class="ioc-table-wrapper" style="display:none;">
+            <table id="ioc_table">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+            <button class="btn-calc" onclick="calculateIOC()">คำนวณผลลัพธ์ IOC</button>
+        </div>
+
+        <div id="res_ioc" class="result-box" style="text-align: left;">
+            <p><strong>สรุปผลการวิเคราะห์:</strong></p>
+            <div id="ioc_summary"></div>
+        </div>
+    </div>
+
+    <div id="alpha" class="tab-content">
+        <h3>คำนวณ Cronbach's Alpha (ความเชื่อมั่น)</h3>
+        <p class="note">Copy ข้อมูลจาก Excel แล้ว Paste ลงในช่องด้านล่าง (เฉพาะตัวเลข)</p>
+        <p class="note" style="color: #666; font-size: 12px;">รูปแบบ: แถว = ผู้ตอบแบบสอบถาม, คอลัมน์ = ข้อคำถาม</p>
+        
+        <div class="form-group">
+            <textarea id="alpha_data" placeholder="ตัวอย่าง:
+5	4	5
+4	4	3
+5	5	4
+..."></textarea>
+        </div>
+
+        <button class="btn-calc" onclick="calculateAlpha()">คำนวณ Alpha</button>
+        
+        <div id="res_alpha" class="result-box">
+            ค่าสัมประสิทธิ์แอลฟา (α)
+            <div class="result-number" id="val_alpha">0.00</div>
+            <div id="alpha_interp" style="margin-top:10px; font-weight:bold;"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- Tab Management ---
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+            tablinks[i].style.opacity = "0.7";
+        }
+        document.getElementById(tabName).style.display = "block";
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+        evt.currentTarget.style.opacity = "1";
+    }
+
+    // --- Helper Function: Show Result ---
+    function showResult(boxId, valId, value) {
+        document.getElementById(boxId).style.display = 'block';
+        document.getElementById(valId).innerText = value;
+    }
+
+    // ================= SAMPLE SIZE LOGIC =================
+
+    function calcYamane() {
+        let N = parseFloat(document.getElementById('y_pop').value);
+        let e = parseFloat(document.getElementById('y_error').value);
+        if (!N) return alert("กรุณาใส่จำนวนประชากร");
+        let n = N / (1 + (N * e * e));
+        showResult('res_yamane', 'val_yamane', Math.ceil(n));
+    }
+
+    function calcKrejcie() {
+        let N = parseFloat(document.getElementById('k_pop').value);
+        if (!N) return alert("กรุณาใส่จำนวนประชากร");
+        let x2 = 3.841, p = 0.5, e = 0.05;
+        let s = (x2 * N * p * (1-p)) / ((e*e * (N-1)) + (x2 * p * (1-p)));
+        showResult('res_krejcie', 'val_krejcie', Math.ceil(s));
+    }
+
+    function calcCochran() {
+        let N = parseFloat(document.getElementById('c_pop').value);
+        let Z = parseFloat(document.getElementById('c_conf').value);
+        let e = parseFloat(document.getElementById('c_error').value);
+        let p = 0.5;
+        let n0 = (Z*Z * p * (1-p)) / (e*e);
+        let n = (N && N > 0) ? n0 / (1 + ((n0 - 1) / N)) : n0;
+        showResult('res_cochran', 'val_cochran', Math.ceil(n));
+    }
+
+    function calcCohen() {
+        let d = parseFloat(document.getElementById('d_val').value);
+        let n = 2 * Math.pow((1.96 + 0.84) / d, 2); // 95% Conf, 80% Power
+        showResult('res_cohen', 'val_cohen', Math.ceil(n * 2));
+    }
+
+    // ================= IOC LOGIC =================
+
+    function generateIOCTable() {
+        const items = parseInt(document.getElementById('ioc_items').value);
+        const experts = parseInt(document.getElementById('ioc_experts').value);
+        
+        if(items < 1 || experts < 1) return alert("กรุณาระบุจำนวนให้ถูกต้อง");
+
+        let table = document.getElementById('ioc_table');
+        let thead = table.querySelector('thead');
+        let tbody = table.querySelector('tbody');
+        
+        // Build Header
+        let headerHTML = '<tr><th>ข้อที่</th>';
+        for(let i=1; i<=experts; i++) headerHTML += `<th>ผู้เชี่ยวชาญ ${i}</th>`;
+        headerHTML += '<th>ผลลัพธ์ IOC</th></tr>';
+        thead.innerHTML = headerHTML;
+
+        // Build Body
+        let bodyHTML = '';
+        for(let i=1; i<=items; i++) {
+            bodyHTML += `<tr><td>${i}</td>`;
+            for(let j=1; j<=experts; j++) {
+                bodyHTML += `
+                <td>
+                    <select class="ioc-score" data-row="${i}">
+                        <option value="1">+1 (แน่ใจ)</option>
+                        <option value="0">0 (ไม่แน่ใจ)</option>
+                        <option value="-1">-1 (ไม่สอดคล้อง)</option>
+                    </select>
+                </td>`;
+            }
+            bodyHTML += `<td id="ioc-res-${i}">-</td></tr>`;
+        }
+        tbody.innerHTML = bodyHTML;
+        document.getElementById('ioc_area').style.display = 'block';
+        document.getElementById('res_ioc').style.display = 'none';
+    }
+
+    function calculateIOC() {
+        const inputs = document.querySelectorAll('.ioc-score');
+        const items = parseInt(document.getElementById('ioc_items').value);
+        const experts = parseInt(document.getElementById('ioc_experts').value);
+        let scores = {}; // Store sums per row
+
+        inputs.forEach(input => {
+            let row = input.getAttribute('data-row');
+            let val = parseInt(input.value);
+            if(!scores[row]) scores[row] = 0;
+            scores[row] += val;
+        });
+
+        let summaryHTML = "<ul>";
+        let passCount = 0;
+
+        for(let i=1; i<=items; i++) {
+            let sum = scores[i] || 0;
+            let ioc = sum / experts;
+            let status = "";
+            let colorClass = "";
+
+            if(ioc >= 0.5) {
+                status = "ใช้ได้";
+                colorClass = "status-pass";
+                passCount++;
+            } else {
+                status = "ตัดทิ้ง/ปรับปรุง";
+                colorClass = "status-fail";
+            }
+
+            document.getElementById(`ioc-res-${i}`).innerHTML = 
+                `<strong>${ioc.toFixed(2)}</strong> <br><span class="${colorClass}">(${status})</span>`;
+            
+            // Only add failed items to summary to save space
+            if(ioc < 0.5) {
+                summaryHTML += `<li>ข้อที่ ${i}: IOC = ${ioc.toFixed(2)} <span class="status-fail">(${status})</span></li>`;
+            }
+        }
+        summaryHTML += "</ul>";
+
+        if(passCount === items) {
+            summaryHTML = "<p class='status-pass'>✅ ทุกข้อผ่านเกณฑ์ (IOC >= 0.5)</p>";
+        } else {
+            summaryHTML = `<p>ผ่าน ${passCount} ข้อ, <span class="status-fail">ไม่ผ่าน ${items - passCount} ข้อ</span> ดังนี้:</p>` + summaryHTML;
+        }
+
+        document.getElementById('res_ioc').style.display = 'block';
+        document.getElementById('ioc_summary').innerHTML = summaryHTML;
+    }
+
+    // ================= CRONBACH'S ALPHA LOGIC =================
+
+    function calculateAlpha() {
+        let rawData = document.getElementById('alpha_data').value.trim();
+        if(!rawData) return alert("กรุณาวางข้อมูลตัวเลข");
+
+        // Parse Data
+        let rows = rawData.split('\n').filter(r => r.trim() !== '');
+        let data = rows.map(r => r.trim().split(/[\t, ]+/).map(Number));
+
+        // Check data integrity
+        let numRespondents = data.length;
+        let numItems = data[0].length;
+        
+        // Calculate Item Variances
+        let itemVariances = [];
+        for(let col=0; col<numItems; col++) {
+            let colData = data.map(row => row[col]);
+            itemVariances.push(getVariance(colData));
+        }
+        let sumItemVar = itemVariances.reduce((a, b) => a + b, 0);
+
+        // Calculate Total Scores Variance
+        let totalScores = data.map(row => row.reduce((a, b) => a + b, 0));
+        let totalVar = getVariance(totalScores);
+
+        // Cronbach Formula
+        // Alpha = (K / K-1) * (1 - (SumVarItem / VarTotal))
+        let alpha = (numItems / (numItems - 1)) * (1 - (sumItemVar / totalVar));
+
+        showResult('res_alpha', 'val_alpha', alpha.toFixed(4));
+        
+        // Interpretation
+        let interp = "";
+        let color = "";
+        if(alpha >= 0.9) { interp = "ยอดเยี่ยม (Excellent)"; color = "#047857"; }
+        else if(alpha >= 0.8) { interp = "ดี (Good)"; color = "#10b981"; }
+        else if(alpha >= 0.7) { interp = "ยอมรับได้ (Acceptable)"; color = "#d97706"; }
+        else if(alpha >= 0.6) { interp = "น่าสงสัย (Questionable)"; color = "#f59e0b"; }
+        else { interp = "ไม่ดี/ควรปรับปรุง (Poor/Unacceptable)"; color = "#ef4444"; }
+        
+        let interpDiv = document.getElementById('alpha_interp');
+        interpDiv.innerText = interp;
+        interpDiv.style.color = color;
+    }
+
+    function getVariance(arr) {
+        let n = arr.length;
+        if (n <= 1) return 0;
+        let mean = arr.reduce((a, b) => a + b) / n;
+        let sumSqDiff = arr.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b);
+        return sumSqDiff / (n - 1); // Sample Variance
+    }
+</script>
+
+</body>
+</html>
