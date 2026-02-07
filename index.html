@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เครื่องมือตรวจสอบคุณภาพงานวิจัย (With Reset)</title>
+    <title>เครื่องมือวิจัย (Export Excel/PDF)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         :root {
             --primary: #4f46e5;
@@ -13,8 +16,8 @@
             --surface: #ffffff;
             --pass: #059669;
             --fail: #dc2626;
-            --gray: #6b7280;
-            --gray-dark: #4b5563;
+            --excel: #107c41;
+            --pdf: #b30b00;
         }
 
         body {
@@ -80,16 +83,9 @@
         }
 
         /* Forms */
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        
         input[type="number"], textarea {
             width: 100%;
             padding: 10px;
@@ -99,52 +95,39 @@
             box-sizing: border-box;
         }
 
-        textarea {
-            height: 200px;
-            font-family: monospace;
-            resize: vertical;
-        }
+        textarea { height: 200px; font-family: monospace; resize: vertical; }
 
-        /* Button Group */
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        button.action-btn {
-            flex: 2; /* ปุ่มคำนวณใหญ่กว่า */
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;}
+        
+        button {
             padding: 12px;
-            background-color: var(--primary);
-            color: white;
             border: none;
             border-radius: 6px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
 
-        button.action-btn:hover {
-            background-color: var(--secondary);
-        }
+        .btn-calc { background-color: var(--primary); color: white; flex: 2; }
+        .btn-calc:hover { background-color: var(--secondary); }
 
-        button.reset-btn {
-            flex: 1; /* ปุ่มรีเซ็ตเล็กกว่า */
-            padding: 12px;
-            background-color: #e5e7eb;
-            color: var(--gray-dark);
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        .btn-reset { background-color: #e5e7eb; color: #374151; flex: 1; }
+        .btn-reset:hover { background-color: #d1d5db; }
 
-        button.reset-btn:hover {
-            background-color: #d1d5db;
-            color: #000;
+        .btn-excel { background-color: var(--excel); color: white; flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        .btn-excel:hover { background-color: #0c5e31; }
+
+        .btn-pdf { background-color: var(--pdf); color: white; flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        .btn-pdf:hover { background-color: #8a0800; }
+
+        .export-area {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #d1d5db;
+            display: flex;
+            gap: 10px;
         }
 
         /* Results */
@@ -165,54 +148,17 @@
             margin: 10px 0;
         }
 
-        /* Table for IOC */
-        .table-responsive {
-            overflow-x: auto;
-            margin-top: 15px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-
-        th, td {
-            border: 1px solid #e5e7eb;
-            padding: 10px;
-            text-align: center;
-        }
-
-        th {
-            background-color: #f3f4f6;
-            color: #374151;
-        }
-
-        select {
-            padding: 5px;
-            border-radius: 4px;
-            border: 1px solid #d1d5db;
-            width: 100%;
-        }
+        /* Table */
+        .table-responsive { overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: center; }
+        th { background-color: #f3f4f6; color: #374151; }
+        select { padding: 5px; border-radius: 4px; width: 100%; border: 1px solid #d1d5db;}
 
         .status-pass { color: var(--pass); font-weight: bold; }
         .status-fail { color: var(--fail); font-weight: bold; }
-        
-        .note {
-            font-size: 0.9em;
-            color: #6b7280;
-            margin-top: 5px;
-        }
-        
-        .error-msg {
-            color: #dc2626;
-            font-weight: bold;
-            margin-top: 10px;
-            display: none;
-            padding: 10px;
-            background-color: #fee2e2;
-            border-radius: 6px;
-        }
+        .error-msg { color: #dc2626; font-weight: bold; margin-top: 10px; display: none; padding: 10px; background-color: #fee2e2; border-radius: 6px; }
+        .note { font-size: 0.9em; color: #6b7280; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -227,7 +173,7 @@
 
     <div id="ioc" class="tab-content active">
         <h3>คำนวณค่าดัชนีความสอดคล้อง (IOC)</h3>
-        <p class="note">ระบุจำนวนข้อคำถามและจำนวนผู้เชี่ยวชาญเพื่อสร้างตารางลงคะแนน</p>
+        <p class="note">ระบุจำนวนข้อคำถามและจำนวนผู้เชี่ยวชาญเพื่อสร้างตาราง</p>
         
         <div style="display: flex; gap: 15px;">
             <div style="flex: 1;">
@@ -241,56 +187,64 @@
         </div>
         
         <div class="btn-group">
-            <button class="action-btn" onclick="createIOCTable()" style="background-color: #4b5563;">สร้างตาราง</button>
-            <button class="reset-btn" onclick="resetIOC()">รีเซ็ต</button>
+            <button class="btn-calc" onclick="createIOCTable()" style="background-color: #4b5563;">สร้างตาราง</button>
+            <button class="btn-reset" onclick="resetIOC()">รีเซ็ต</button>
         </div>
 
         <div id="ioc_wrapper" style="display:none;">
-            <div class="table-responsive">
-                <table id="ioc_table">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
+            <div id="ioc_print_area">
+                <div class="table-responsive">
+                    <table id="ioc_table">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <div id="ioc_result" class="result-card">
+                    <h4 style="margin-top:0;">สรุปผลการวิเคราะห์</h4>
+                    <div id="ioc_details"></div>
+                </div>
             </div>
             
-            <button class="action-btn" style="margin-top: 15px;" onclick="calculateIOC()">คำนวณผลลัพธ์ IOC</button>
-            
-            <div id="ioc_result" class="result-card">
-                <h4 style="margin-top:0;">สรุปผลการวิเคราะห์</h4>
-                <div id="ioc_details"></div>
+            <button class="btn-calc" style="margin-top: 15px; width:100%" onclick="calculateIOC()">คำนวณผลลัพธ์ IOC</button>
+
+            <div class="export-area" id="ioc_export_btns" style="display:none;">
+                <button class="btn-excel" onclick="exportIOCExcel()">📥 Excel</button>
+                <button class="btn-pdf" onclick="exportIOCPDF()">📄 PDF</button>
             </div>
         </div>
     </div>
 
     <div id="alpha" class="tab-content">
         <h3>คำนวณ Cronbach's Alpha Coefficient</h3>
-        <p class="note">
-            วิธีใช้: Copy ข้อมูลดิบจาก Excel (เฉพาะตัวเลข) แล้วนำมาวางในช่องด้านล่าง<br>
-            * ระบบจะตัดแถวที่เป็นตัวหนังสือ (Header) ทิ้งให้อัตโนมัติ
-        </p>
+        <p class="note">Copy ข้อมูลตัวเลขจาก Excel (แถว=คน, คอลัมน์=ข้อ) แล้ววางด้านล่าง</p>
         
         <div class="input-group">
-            <textarea id="alpha_data" placeholder="ตัวอย่างข้อมูล:
-5	4	5	4
-4	3	4	4
-5	5	4	5
-..."></textarea>
+            <textarea id="alpha_data" placeholder="วางข้อมูลที่นี่..."></textarea>
             <div id="alpha_error" class="error-msg"></div>
         </div>
 
         <div class="btn-group">
-            <button class="action-btn" onclick="calculateAlpha()">คำนวณค่า Alpha</button>
-            <button class="reset-btn" onclick="resetAlpha()">ล้างข้อมูล (Reset)</button>
+            <button class="btn-calc" onclick="calculateAlpha()">คำนวณค่า Alpha</button>
+            <button class="btn-reset" onclick="resetAlpha()">รีเซ็ต</button>
         </div>
 
-        <div id="alpha_result" class="result-card">
-            <div style="text-align: center;">ค่าสัมประสิทธิ์แอลฟา (α-coefficient)</div>
-            <div class="result-value" id="alpha_value">0.000</div>
-            <div id="alpha_interpretation" style="text-align: center; font-weight: bold;"></div>
-            <p class="note" style="text-align: center;">(วิเคราะห์จากข้อมูลที่สมบูรณ์ <span id="n_respondents">0</span> คน, จำนวน <span id="n_items">0</span> ข้อ)</p>
+        <div id="alpha_result_wrapper" style="display:none;">
+            <div id="alpha_print_area" class="result-card" style="display:block;">
+                <div style="text-align: center;">ค่าสัมประสิทธิ์แอลฟา (α-coefficient)</div>
+                <div class="result-value" id="alpha_value">0.000</div>
+                <div id="alpha_interpretation" style="text-align: center; font-weight: bold;"></div>
+                <p class="note" style="text-align: center;">
+                    (จำนวนกลุ่มตัวอย่าง N = <span id="n_respondents">0</span>, จำนวนข้อ = <span id="n_items">0</span>)
+                </p>
+            </div>
+
+            <div class="export-area">
+                <button class="btn-excel" onclick="exportAlphaExcel()">📥 Excel</button>
+                <button class="btn-pdf" onclick="exportAlphaPDF()">📄 PDF</button>
+            </div>
         </div>
     </div>
-
 </div>
 
 <script>
@@ -302,40 +256,32 @@
         event.currentTarget.classList.add('active');
     }
 
-    // --- IOC Logic ---
+    // ================= IOC LOGIC =================
     function createIOCTable() {
         const items = parseInt(document.getElementById('ioc_items').value);
         const experts = parseInt(document.getElementById('ioc_experts').value);
         
-        if(!items || !experts) return alert("กรุณาระบุจำนวนข้อและผู้เชี่ยวชาญ");
+        if(!items || !experts) return alert("กรุณาระบุจำนวน");
 
         const table = document.getElementById('ioc_table');
         let headerHTML = '<tr><th style="width:50px">ข้อที่</th>';
+        for(let i=1; i<=experts; i++) headerHTML += `<th>ผู้เชี่ยวชาญ ${i}</th>`;
+        headerHTML += '<th style="width:100px">IOC</th><th style="width:100px">ผล</th></tr>';
         
-        for(let i=1; i<=experts; i++) {
-            headerHTML += `<th>ผู้เชี่ยวชาญคนที่ ${i}</th>`;
-        }
-        headerHTML += '<th style="width:100px">ค่า IOC</th><th style="width:100px">แปลผล</th></tr>';
         table.querySelector('thead').innerHTML = headerHTML;
 
         let bodyHTML = '';
         for(let i=1; i<=items; i++) {
             bodyHTML += `<tr><td>${i}</td>`;
             for(let j=1; j<=experts; j++) {
-                bodyHTML += `
-                <td>
-                    <select class="ioc-input" data-row="${i}">
-                        <option value="1">+1 (สอดคล้อง)</option>
-                        <option value="0">0 (ไม่แน่ใจ)</option>
-                        <option value="-1">-1 (ไม่สอดคล้อง)</option>
-                    </select>
-                </td>`;
+                bodyHTML += `<td><select class="ioc-input" data-row="${i}"><option value="1">+1</option><option value="0">0</option><option value="-1">-1</option></select></td>`;
             }
             bodyHTML += `<td id="ioc-val-${i}">-</td><td id="ioc-res-${i}">-</td></tr>`;
         }
         table.querySelector('tbody').innerHTML = bodyHTML;
         document.getElementById('ioc_wrapper').style.display = 'block';
         document.getElementById('ioc_result').style.display = 'none';
+        document.getElementById('ioc_export_btns').style.display = 'none';
     }
 
     function calculateIOC() {
@@ -346,121 +292,129 @@
         let scores = {};
         inputs.forEach(inp => {
             const row = inp.getAttribute('data-row');
-            const val = parseInt(inp.value);
-            scores[row] = (scores[row] || 0) + val;
+            scores[row] = (scores[row] || 0) + parseInt(inp.value);
         });
 
         let passCount = 0;
         let detailsHTML = "<ul style='text-align:left;'>";
 
         for(let i=1; i<=items; i++) {
-            let sum = scores[i] || 0;
-            let ioc = sum / experts;
+            let ioc = (scores[i] || 0) / experts;
             let passed = ioc >= 0.5;
             
-            // Update Table
             document.getElementById(`ioc-val-${i}`).innerText = ioc.toFixed(2);
             document.getElementById(`ioc-res-${i}`).innerHTML = passed 
-                ? '<span class="status-pass">ใช้ได้</span>' 
-                : '<span class="status-fail">ตัดออก</span>';
+                ? '<span class="status-pass">ใช้ได้</span>' : '<span class="status-fail">ตัดออก</span>';
 
             if(passed) passCount++;
             else detailsHTML += `<li>ข้อที่ ${i}: IOC = ${ioc.toFixed(2)} <span class="status-fail">(ควรปรับปรุง)</span></li>`;
         }
         detailsHTML += "</ul>";
 
-        const resultDiv = document.getElementById('ioc_result');
         const detailDiv = document.getElementById('ioc_details');
+        document.getElementById('ioc_result').style.display = 'block';
+        document.getElementById('ioc_export_btns').style.display = 'flex';
         
-        resultDiv.style.display = 'block';
         if(passCount === items) {
             detailDiv.innerHTML = `<p class="status-pass" style="font-size:18px">✅ ผ่านเกณฑ์ทุกข้อ (IOC ≥ 0.5)</p>`;
         } else {
-            detailDiv.innerHTML = `<p>ผ่านเกณฑ์ ${passCount} ข้อ, <span class="status-fail">ไม่ผ่าน ${items - passCount} ข้อ</span> ดังนี้:</p>` + detailsHTML;
+            detailDiv.innerHTML = `<p>ผ่าน ${passCount} ข้อ, <span class="status-fail">ไม่ผ่าน ${items - passCount} ข้อ</span>:</p>` + detailsHTML;
         }
     }
-    
+
     function resetIOC() {
         document.getElementById('ioc_items').value = 5;
         document.getElementById('ioc_experts').value = 3;
         document.getElementById('ioc_wrapper').style.display = 'none';
-        document.getElementById('ioc_result').style.display = 'none';
     }
 
-    // --- Alpha Logic (Robust) ---
+    // --- Export IOC ---
+    function exportIOCExcel() {
+        // Clone table to modify values (convert select to text) for export
+        let originalTable = document.getElementById('ioc_table');
+        let tableClone = originalTable.cloneNode(true);
+        
+        // Replace selects with their values in the clone
+        let inputs = originalTable.querySelectorAll('.ioc-input');
+        let cloneInputs = tableClone.querySelectorAll('.ioc-input'); // Selects in clone
+        
+        inputs.forEach((inp, index) => {
+            let val = inp.options[inp.selectedIndex].text;
+            let parent = cloneInputs[index].parentElement;
+            parent.innerHTML = val; // Replace select with text
+        });
+
+        var wb = XLSX.utils.table_to_book(tableClone, {sheet: "IOC Results"});
+        XLSX.writeFile(wb, 'IOC_Analysis_Result.xlsx');
+    }
+
+    function exportIOCPDF() {
+        var element = document.getElementById('ioc_print_area');
+        var opt = {
+            margin:       0.5,
+            filename:     'IOC_Report.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+
+    // ================= ALPHA LOGIC =================
     function calculateAlpha() {
         const rawText = document.getElementById('alpha_data').value.trim();
         const errorBox = document.getElementById('alpha_error');
         errorBox.style.display = 'none';
 
-        if(!rawText) {
-            alert("กรุณาวางข้อมูลตัวเลขลงในช่องว่าง");
-            return;
-        }
+        if(!rawText) return alert("กรุณาวางข้อมูล");
 
-        // Robust Parsing Logic
         let validData = [];
         const lines = rawText.split('\n');
         
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
-            if (line === '') continue; 
-
-            // Split by tab, comma, or multiple spaces
+            if (line === '') continue;
             const parts = line.split(/[\t, ]+/);
             const rowNumbers = parts.map(p => parseFloat(p));
-            const hasNaN = rowNumbers.some(isNaN);
-
-            if (!hasNaN && rowNumbers.length > 1) {
+            if (!rowNumbers.some(isNaN) && rowNumbers.length > 1) {
                 validData.push(rowNumbers);
             }
         }
 
         if (validData.length < 2) {
-            errorBox.innerText = "❌ เกิดข้อผิดพลาด: ข้อมูลที่ใช้ได้มีน้อยกว่า 2 แถว หรือมีตัวอักษรปนอยู่มากเกินไป";
+            errorBox.innerText = "❌ ข้อมูลไม่เพียงพอ (ต้องมีอย่างน้อย 2 แถว และเป็นตัวเลข)";
             errorBox.style.display = 'block';
             return;
         }
 
-        const n = validData.length; // Respondents
-        const k = validData[0].length; // Items
+        const n = validData.length;
+        const k = validData[0].length;
 
-        const inconsistent = validData.some(row => row.length !== k);
-        if (inconsistent) {
-            errorBox.innerText = "⚠️ แจ้งเตือน: ข้อมูลในแต่ละแถวมีจำนวนข้อไม่เท่ากัน ระบบจะคำนวณตามจำนวนข้อของแถวแรก";
-            errorBox.style.display = 'block';
-        }
-        
-        // 1. Calculate Variance for each item
-        let sumItemVariance = 0;
+        let sumItemVar = 0;
         for(let col=0; col<k; col++) {
             let colData = validData.map(row => row[col]);
-            sumItemVariance += getVariance(colData);
+            sumItemVar += getVariance(colData);
         }
 
-        // 2. Calculate Variance of total scores
         let totalScores = validData.map(row => row.reduce((a, b) => a + b, 0));
-        let totalVariance = getVariance(totalScores);
+        let totalVar = getVariance(totalScores);
 
-        // 3. Prevent Division by Zero
-        if (totalVariance === 0) {
-            errorBox.innerText = "❌ เกิดข้อผิดพลาด: ความแปรปรวนรวมเป็น 0 (ผู้ตอบทุกคนได้คะแนนรวมเท่ากันเป๊ะ) ทำให้คำนวณ Alpha ไม่ได้";
+        if (totalVar === 0) {
+            errorBox.innerText = "❌ ความแปรปรวนรวมเป็น 0 (คำนวณไม่ได้)";
             errorBox.style.display = 'block';
-            document.getElementById('alpha_result').style.display = 'none';
+            document.getElementById('alpha_result_wrapper').style.display = 'none';
             return;
         }
 
-        // 4. Formula
-        let alpha = (k / (k - 1)) * (1 - (sumItemVariance / totalVariance));
+        let alpha = (k / (k - 1)) * (1 - (sumItemVar / totalVar));
 
-        document.getElementById('alpha_result').style.display = 'block';
+        document.getElementById('alpha_result_wrapper').style.display = 'block';
         document.getElementById('alpha_value').innerText = alpha.toFixed(4);
         document.getElementById('n_respondents').innerText = n;
         document.getElementById('n_items').innerText = k;
 
-        // Interpret
-        let text = "";
-        let color = "";
+        let text = "", color = "";
         if(alpha >= 0.9) { text = "ระดับดีมาก (Excellent)"; color = "#047857"; }
         else if(alpha >= 0.8) { text = "ระดับดี (Good)"; color = "#059669"; }
         else if(alpha >= 0.7) { text = "ระดับยอมรับได้ (Acceptable)"; color = "#d97706"; }
@@ -472,19 +426,55 @@
         interpDiv.style.color = color;
     }
 
-    function resetAlpha() {
-        document.getElementById('alpha_data').value = "";
-        document.getElementById('alpha_result').style.display = 'none';
-        document.getElementById('alpha_error').style.display = 'none';
-    }
-
     function getVariance(arr) {
         const n = arr.length;
         if (n <= 1) return 0;
         const mean = arr.reduce((a, b) => a + b) / n;
-        const sumSqDiff = arr.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b);
-        return sumSqDiff / (n - 1); 
+        return arr.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / (n - 1);
     }
+
+    function resetAlpha() {
+        document.getElementById('alpha_data').value = "";
+        document.getElementById('alpha_result_wrapper').style.display = 'none';
+        document.getElementById('alpha_error').style.display = 'none';
+    }
+
+    // --- Export Alpha ---
+    function exportAlphaExcel() {
+        const val = document.getElementById('alpha_value').innerText;
+        const n = document.getElementById('n_respondents').innerText;
+        const k = document.getElementById('n_items').innerText;
+        const interp = document.getElementById('alpha_interpretation').innerText;
+
+        const data = [
+            ["Report", "Cronbach's Alpha Analysis"],
+            ["Date", new Date().toLocaleString()],
+            [],
+            ["Metric", "Value"],
+            ["Alpha Coefficient", parseFloat(val)],
+            ["Interpretation", interp],
+            ["Respondents (N)", parseInt(n)],
+            ["Items (Questions)", parseInt(k)]
+        ];
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Alpha Result");
+        XLSX.writeFile(wb, 'Alpha_Result.xlsx');
+    }
+
+    function exportAlphaPDF() {
+        var element = document.getElementById('alpha_print_area');
+        var opt = {
+            margin:       0.5,
+            filename:     'Alpha_Report.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
 </script>
 
 </body>
